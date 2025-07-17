@@ -196,3 +196,4 @@ The package uses modularity to measure community quality:
 ## 📝 License
 
 This project is part of the MINI03 research initiative exploring community detection in computational problems.
+# CD-to-3SAT
