@@ -1,0 +1,16 @@
+c DIMACS CNF format
+c Generated from: research_4vars_10clauses_seed456.md
+c Enhanced research pipeline - dual analysis ready
+c Generated on: 2025-07-15T10:37:22.256
+c
+p cnf 4 10
+-2 2 -1 0
+1 4 -3 0
+1 -2 -2 0
+-4 -1 1 0
+1 4 -2 0
+2 3 4 0
+-3 -3 -1 0
+1 -2 -1 0
+-1 3 -1 0
+-3 2 -3 0

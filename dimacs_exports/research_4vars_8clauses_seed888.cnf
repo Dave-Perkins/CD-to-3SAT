@@ -1,0 +1,14 @@
+c DIMACS CNF format
+c Generated from: research_4vars_8clauses_seed888.md
+c Batch export from 
+c Generated on: 2025-07-15T10:21:56.960
+c
+p cnf 4 8
+-2 3 -2 0
+-3 -1 -4 0
+-4 4 3 0
+-3 -3 2 0
+2 -2 2 0
+-3 -3 -1 0
+-2 -4 -4 0
+4 1 -4 0

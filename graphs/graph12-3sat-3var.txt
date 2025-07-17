@@ -1,0 +1,30 @@
+# 3-SAT Literal Graph: graph12.txt
+# 
+# 3-SAT Instance:
+# Variables: x₁, x₂, x₃
+# Clauses: 
+#   C₁: (x₁ ∨ ¬x₂ ∨ x₃)
+#   C₂: (¬x₁ ∨ x₂ ∨ ¬x₃)  
+#   C₃: (x₁ ∨ x₂ ∨ x₃)
+#
+# Node mapping (simplified):
+#   1: x₁   2: x₂   3: x₃   4: ¬x₁   5: ¬x₂   6: ¬x₃
+#
+# Edges connect literals that appear in the same clause
+# Edge weights = number of clauses containing both literals
+
+# From clause C₁: (x₁ ∨ ¬x₂ ∨ x₃)
+1 5 1
+1 3 2
+5 3 1
+
+# From clause C₂: (¬x₁ ∨ x₂ ∨ ¬x₃)  
+4 2 1
+4 6 1
+2 6 1
+
+# From clause C₃: (x₁ ∨ x₂ ∨ x₃)
+1 2 1
+2 3 1
+
+# Note: Edge (1,3) has weight 2 because x₁ and x₃ appear together in both C₁ and C₃

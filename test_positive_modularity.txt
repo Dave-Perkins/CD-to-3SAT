@@ -1,0 +1,28 @@
+# Custom graph designed for positive modularity communities
+# 4 variables = 8 nodes total
+# Nodes 1-4: positive literals x1, x2, x3, x4  
+# Nodes 5-8: negative literals ¬x1, ¬x2, ¬x3, ¬x4
+# 
+# Community 1: nodes [1,2,5,6] (x1, x2, ¬x1, ¬x2)
+# Community 2: nodes [3,4,7,8] (x3, x4, ¬x3, ¬x4)
+#
+# Very heavy internal connections, minimal external connections
+
+# Very strong internal connections in Community 1 (x1, x2 group)
+1 2 20
+1 5 20  
+1 6 15
+2 5 15
+2 6 20
+5 6 20
+
+# Very strong internal connections in Community 2 (x3, x4 group)  
+3 4 20
+3 7 20
+3 8 15
+4 7 15
+4 8 20
+7 8 20
+
+# Minimal connections between communities (much weaker)
+2 3 1

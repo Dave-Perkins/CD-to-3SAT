@@ -1,0 +1,53 @@
+# 3-SAT Literal Graph: graph13-3sat-large.txt
+#
+
+
+# 3-SAT Instance (5 variables, 6 clauses):
+# Instance: (x₁ ∨ ¬x₂ ∨ x₃) ∧ (¬x₁ ∨ x₄ ∨ ¬x₅) ∧ (x₂ ∨ x₃ ∨ ¬x₄) ∧ (¬x₃ ∨ x₅ ∨ x₁) ∧ (x₄ ∨ ¬x₁ ∨ x₂) ∧ (¬x₂ ∨ ¬x₃ ∨ x₅)
+# Variables: x₁, x₂, x₃, x₄, x₅
+# Clauses: 
+#   C₁: (x₁ ∨ ¬x₂ ∨ x₃)
+#   C₂: (¬x₁ ∨ x₄ ∨ ¬x₅)  
+#   C₃: (x₂ ∨ x₃ ∨ ¬x₄)
+#   C₄: (¬x₃ ∨ x₅ ∨ x₁)
+#   C₅: (x₄ ∨ ¬x₁ ∨ x₂)
+#   C₆: (¬x₂ ∨ ¬x₃ ∨ x₅)
+#
+# Node mapping:
+#   1: x₁   2: x₂   3: x₃   4: x₄   5: x₅
+#   6: ¬x₁  7: ¬x₂  8: ¬x₃  9: ¬x₄  10: ¬x₅
+#
+# Edges connect literals that appear in the same clause
+# Edge weights = number of clauses containing both literals
+
+# From clause C₁: (x₁ ∨ ¬x₂ ∨ x₃)
+1 7 1
+1 3 2
+7 3 1
+
+# From clause C₂: (¬x₁ ∨ x₄ ∨ ¬x₅)  
+6 4 1
+6 10 1
+4 10 1
+
+# From clause C₃: (x₂ ∨ x₃ ∨ ¬x₄)
+2 3 1
+2 9 1
+3 9 1
+
+# From clause C₄: (¬x₃ ∨ x₅ ∨ x₁)
+8 5 1
+8 1 1
+5 1 1
+
+# From clause C₅: (x₄ ∨ ¬x₁ ∨ x₂)
+4 6 1
+4 2 1
+6 2 1
+
+# From clause C₆: (¬x₂ ∨ ¬x₃ ∨ x₅)
+7 8 1
+7 5 1
+8 5 1
+
+# Note: Edge (1,3) has weight 2 because x₁ and x₃ appear together in both C₁ and C₄

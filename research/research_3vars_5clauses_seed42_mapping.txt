@@ -1,0 +1,1 @@
+Node 1: x1\nNode 2: ¬x1\nNode 3: x2\nNode 4: ¬x2\nNode 5: x3\nNode 6: ¬x3\n

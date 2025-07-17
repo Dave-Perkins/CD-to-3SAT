@@ -1,0 +1,6 @@
+Node 1: x1
+Node 2: ¬x1
+Node 3: x2
+Node 4: ¬x2
+Node 5: x3
+Node 6: ¬x3

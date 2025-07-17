@@ -1,0 +1,13 @@
+c DIMACS CNF format
+c Generated from: research_3vars_7clauses_seed777.md
+c Batch export from 
+c Generated on: 2025-07-15T10:21:56.960
+c
+p cnf 3 7
+3 1 -1 0
+3 1 2 0
+-1 -1 3 0
+-2 -1 -2 0
+2 2 2 0
+-2 1 -3 0
+2 2 3 0
