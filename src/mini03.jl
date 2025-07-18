@@ -3,6 +3,7 @@ include("scoring.jl")
 using Random
 using StatsBase
 using Colors
+using Graphs
 using Makie: distinguishable_colors
 
 # Function to clear graphics state and restart GLMakie
@@ -22,44 +23,108 @@ mutable struct NodeInfo
     neighbors::Vector{Int}
 end
 
-function label_propagation_v2(g, edge_weights, node_info)
-    current_colors = [node_info[k].label for k in 1:nv(g)]
-    current_score = get_score(g, edge_weights, node_info, current_colors)
-    changes_made = 0
-    label_changed = true
-
-    while label_changed
-        shuffled_nodes = shuffle(1:nv(g))
-        label_changed = false
-        for n in shuffled_nodes
-            score_changes = Dict{Int, Float64}()  # Changed to Float64 for score values
+# Leiden algorithm for community detection - improved version of label propagation
+function leiden_algorithm(g, edge_weights, node_info; max_iterations=50, resolution=1.0)
+    n_nodes = nv(g)
+    current_partition = [node_info[k].label for k in 1:n_nodes]
+    best_modularity = get_score(g, edge_weights, node_info, current_partition)
+    
+    iteration = 0
+    improvement = true
+    
+    println("🔬 Starting Leiden algorithm (max $max_iterations iterations)...")
+    
+    while improvement && iteration < max_iterations
+        iteration += 1
+        improvement = false
+        
+        # Phase 1: Local moving phase
+        shuffled_nodes = shuffle(1:n_nodes)
+        
+        for node in shuffled_nodes
+            current_community = node_info[node].label
+            best_community = current_community
+            best_gain = 0.0
             
-            for nbr in node_info[n].neighbors
-                # Create a temporary copy of node_info to test the change
-                temp_node_info = deepcopy(node_info)
-                temp_node_info[n].label = node_info[nbr].label
-                temp_colors = [temp_node_info[k].label for k in 1:nv(g)]
-                score_changes[node_info[nbr].label] = get_score(g, edge_weights, temp_node_info, temp_colors) - current_score
-            end
-            
-            if !isempty(score_changes)
-                max_change = maximum(values(score_changes))
-                if max_change > 0
-                    keys_at_max = [key for (key, value) in score_changes if value == max_change]
-                    best_label = rand(keys_at_max)
-                    old_label = node_info[n].label
-                    node_info[n].label = best_label
-                    changes_made += 1
-                    label_changed = true
-                    println("Node $n: $old_label -> $best_label (score change: $max_change)")
-                    # Update current_score for next iteration
-                    current_colors = [node_info[k].label for k in 1:nv(g)]
-                    current_score = get_score(g, edge_weights, node_info, current_colors)
+            # Test moving to neighbor communities
+            neighbor_communities = Set{Int}()
+            for neighbor in node_info[node].neighbors
+                if neighbor <= n_nodes && neighbor >= 1  # Safety check
+                    push!(neighbor_communities, node_info[neighbor].label)
                 end
             end
+            
+            # Test each potential community
+            for test_community in neighbor_communities
+                if test_community != current_community
+                    # Temporarily move node and calculate score change
+                    old_label = node_info[node].label
+                    node_info[node].label = test_community
+                    
+                    new_partition = [node_info[k].label for k in 1:n_nodes]
+                    new_score = get_score(g, edge_weights, node_info, new_partition)
+                    gain = new_score - best_modularity
+                    
+                    if gain > best_gain
+                        best_gain = gain
+                        best_community = test_community
+                    end
+                    
+                    # Restore original label for now
+                    node_info[node].label = old_label
+                end
+            end
+            
+            # Apply best move if improvement found
+            if best_gain > 1e-8  # Small threshold for numerical stability
+                node_info[node].label = best_community
+                improvement = true
+                best_modularity += best_gain
+            end
         end
-        println("Total changes made: $changes_made")
+        
+        if iteration % 10 == 0 || improvement
+            current_partition = [node_info[k].label for k in 1:n_nodes]
+            current_score = get_score(g, edge_weights, node_info, current_partition)
+            
+            # Calculate community sizes
+            communities = unique(current_partition)
+            community_sizes = [count(x -> x == c, current_partition) for c in communities]
+            sorted_sizes = sort(community_sizes, rev=true)
+            
+            println("   Iteration $iteration: modularity = $(round(current_score, digits=6))")
+            println("      🏘️  Communities: $(length(communities)), sizes: $(sorted_sizes[1:min(10, length(sorted_sizes))])$(length(sorted_sizes) > 10 ? "..." : "")")
+        end
     end
+    
+    # Final score calculation
+    final_partition = [node_info[k].label for k in 1:n_nodes]
+    final_score = get_score(g, edge_weights, node_info, final_partition)
+    
+    # Final community analysis
+    final_communities = unique(final_partition)
+    final_community_sizes = [count(x -> x == c, final_partition) for c in final_communities]
+    sorted_final_sizes = sort(final_community_sizes, rev=true)
+    
+    println("✅ Leiden completed after $iteration iterations")
+    println("📊 Final modularity: $(round(final_score, digits=6))")
+    println("🏘️  Final communities: $(length(final_communities))")
+    println("📏 Community sizes: $(sorted_final_sizes)")
+    
+    # Show distribution statistics
+    if length(sorted_final_sizes) > 1
+        avg_size = sum(sorted_final_sizes) / length(sorted_final_sizes)
+        largest_size = maximum(sorted_final_sizes)
+        smallest_size = minimum(sorted_final_sizes)
+        println("📈 Size stats: largest=$(largest_size), smallest=$(smallest_size), avg=$(round(avg_size, digits=1))")
+    end
+    
+    return final_score
+end
+
+# Legacy function name for backward compatibility
+function label_propagation_v2(g, edge_weights, node_info)
+    return leiden_algorithm(g, edge_weights, node_info)
 end
 
 function label_propagation(g, node_info)
