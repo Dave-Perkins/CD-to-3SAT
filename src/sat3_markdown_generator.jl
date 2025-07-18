@@ -2,6 +2,7 @@
 # Handles Markdown-formatted 3-SAT instances
 
 using Random
+using StatsBase  # For sample function
 
 # Structure to represent a 3-SAT instance
 struct SAT3Instance
@@ -10,23 +11,28 @@ struct SAT3Instance
     metadata::Dict{String, Any}
 end
 
-# Generate random 3-SAT instance
+# Generate random 3-SAT instance with exactly 3 distinct literals per clause
 function generate_random_3sat(num_vars::Int, num_clauses::Int; seed=nothing)
     if seed !== nothing
         Random.seed!(seed)
     end
     
+    if num_vars < 3
+        error("Need at least 3 variables to generate 3-SAT with distinct literals per clause")
+    end
+    
     # Create variable names
     variables = ["x$i" for i in 1:num_vars]
     
-    # Generate random clauses
+    # Generate random clauses with exactly 3 distinct variables each
     clauses = []
     for _ in 1:num_clauses
+        # Pick 3 distinct variables (without replacement)
+        selected_vars = sample(variables, 3, replace=false)
+        
         clause = []
-        # Pick 3 random variables (with replacement allowed)
-        for _ in 1:3
-            var = rand(variables)
-            # 50% chance of negation
+        for var in selected_vars
+            # 50% chance of negation for each literal
             literal = rand(Bool) ? var : "¬$var"
             push!(clause, literal)
         end
@@ -38,10 +44,112 @@ function generate_random_3sat(num_vars::Int, num_clauses::Int; seed=nothing)
         "clauses" => num_clauses,
         "ratio" => num_clauses / num_vars,
         "generated" => "random",
-        "seed" => seed
+        "seed" => seed,
+        "constraint" => "3_distinct_literals_per_clause"
     )
     
     return SAT3Instance(variables, clauses, metadata)
+end
+
+# Validate that all clauses have exactly 3 distinct literals
+function validate_distinct_literals(instance::SAT3Instance)
+    violations = []
+    
+    for (i, clause) in enumerate(instance.clauses)
+        if length(clause) != 3
+            push!(violations, "Clause $i has $(length(clause)) literals (expected 3)")
+            continue
+        end
+        
+        # Extract variable names from literals
+        variables_in_clause = Set{String}()
+        for literal in clause
+            # Remove negation symbol to get variable name (handle Unicode ¬)
+            if startswith(literal, "¬")
+                # Find the variable part after the negation symbol
+                var_match = match(r"x\d+", literal)
+                if var_match !== nothing
+                    push!(variables_in_clause, var_match.match)
+                end
+            else
+                push!(variables_in_clause, literal)
+            end
+        end
+        
+        if length(variables_in_clause) != 3
+            distinct_vars = collect(variables_in_clause)
+            push!(violations, "Clause $i: $(join(clause, " ∨ ")) uses only $(length(variables_in_clause)) distinct variables: $(join(distinct_vars, ", "))")
+        end
+    end
+    
+    return violations
+end
+
+# Validate and optionally fix SAT instance
+function ensure_distinct_literals(instance::SAT3Instance; fix_violations=true)
+    violations = validate_distinct_literals(instance)
+    
+    if isempty(violations)
+        println("✅ All clauses have 3 distinct literals")
+        return instance, violations
+    end
+    
+    if !fix_violations
+        println("❌ Found $(length(violations)) clause violations:")
+        for violation in violations
+            println("   • $violation")
+        end
+        return instance, violations
+    end
+    
+    # Fix violations by regenerating problematic clauses
+    println("🔧 Found $(length(violations)) violations, fixing...")
+    fixed_clauses = copy(instance.clauses)
+    
+    for (i, clause) in enumerate(instance.clauses)
+        vars_in_clause = Set{String}()
+        for literal in clause
+            # Extract variable name safely
+            if startswith(literal, "¬")
+                var_match = match(r"x\d+", literal)
+                if var_match !== nothing
+                    push!(vars_in_clause, var_match.match)
+                end
+            else
+                push!(vars_in_clause, literal)
+            end
+        end
+        
+        if length(vars_in_clause) != 3
+            # Regenerate this clause with 3 distinct variables
+            available_vars = instance.variables
+            if length(available_vars) >= 3
+                selected_vars = sample(available_vars, 3, replace=false)
+                new_clause = []
+                for var in selected_vars
+                    literal = rand(Bool) ? var : "¬$var"
+                    push!(new_clause, literal)
+                end
+                fixed_clauses[i] = new_clause
+                println("   Fixed clause $i: $(join(clause, " ∨ ")) → $(join(new_clause, " ∨ "))")
+            end
+        end
+    end
+    
+    # Create new instance with fixed clauses
+    fixed_metadata = copy(instance.metadata)
+    fixed_metadata["fixed_violations"] = length(violations)
+    fixed_instance = SAT3Instance(instance.variables, fixed_clauses, fixed_metadata)
+    
+    # Validate the fix
+    remaining_violations = validate_distinct_literals(fixed_instance)
+    if isempty(remaining_violations)
+        println("✅ All violations fixed successfully")
+    else
+        println("⚠️  $(length(remaining_violations)) violations remain")
+    end
+    
+    return fixed_instance, violations
 end
 
 # Convert 3-SAT instance to Markdown format
@@ -63,11 +171,18 @@ function to_markdown(instance::SAT3Instance, title::String="3-SAT Instance")
     md *= """
     
     ## Metadata
-    - Variables: $(instance.metadata["variables"])
-    - Clauses: $(instance.metadata["clauses"])
-    - Ratio: $(round(instance.metadata["ratio"], digits=2)) (clauses/variables)
-    - Generated: $(instance.metadata["generated"])
-    """
+    - Variables: $(get(instance.metadata, "variables", length(instance.variables)))
+    - Clauses: $(get(instance.metadata, "clauses", length(instance.clauses)))
+    - Ratio: $(round(get(instance.metadata, "ratio", length(instance.clauses) / length(instance.variables)), digits=2)) (clauses/variables)"""
+    
+    if haskey(instance.metadata, "generated")
+        md *= "\n- Generated: $(instance.metadata["generated"])"
+    end
+    if haskey(instance.metadata, "seed")
+        md *= "\n- Seed: $(instance.metadata["seed"])"
+    end
+    
+    md *= "\n"
     
     if haskey(instance.metadata, "seed")
         md *= "\n- Seed: $(instance.metadata["seed"])"
@@ -224,4 +339,75 @@ println("\n=== Preview of Markdown File ===")
 println(md_content[1:min(length(md_content), 500)])
 if length(md_content) > 500
     println("... (truncated)")
+end
+
+# CONVENIENCE FUNCTIONS FOR CREATING VALID 3-SAT INSTANCES
+
+"""
+Create a research-quality 3-SAT instance with guaranteed distinct literals per clause.
+This is the recommended way to create new 3-SAT instances.
+"""
+function create_research_instance(num_vars::Int, num_clauses::Int; 
+                                 seed=nothing, 
+                                 title="Research 3-SAT Instance",
+                                 validate=true)
+    
+    # Generate the instance
+    instance = generate_random_3sat(num_vars, num_clauses, seed=seed)
+    
+    # Validate constraints
+    if validate
+        violations = validate_distinct_literals(instance)
+        if !isempty(violations)
+            error("Generated instance has constraint violations: $(join(violations, ", "))")
+        end
+        println("✅ Generated valid instance: $num_vars variables, $num_clauses clauses")
+    end
+    
+    return instance, to_markdown(instance, title)
+end
+
+"""
+Quick template for creating test instances with proper constraints.
+Usage: 
+  - create_test_instance(4, 8)  # 4 variables, 8 clauses
+  - create_test_instance(5, 15, seed=42, name="my_test")
+"""
+function create_test_instance(num_vars::Int, num_clauses::Int; 
+                             seed=nothing, 
+                             name="test_instance")
+    
+    if num_vars < 3
+        error("Need at least 3 variables for distinct literals constraint")
+    end
+    
+    instance, markdown = create_research_instance(
+        num_vars, num_clauses, 
+        seed=seed, 
+        title="Test Instance: $num_vars variables, $num_clauses clauses"
+    )
+    
+    # Save to file
+    filename = "$(name)_$(num_vars)vars_$(num_clauses)clauses"
+    if seed !== nothing
+        filename *= "_seed$(seed)"
+    end
+    filename *= ".md"
+    
+    write(filename, markdown)
+    println("💾 Saved to: $filename")
+    
+    return instance, filename
+end
+
+"""
+Reminder function - always call this when creating new instances manually!
+"""
+function remind_distinct_literals()
+    println("🔒 CONSTRAINT REMINDER:")
+    println("   • All 3-SAT clauses MUST have exactly 3 DISTINCT literals")
+    println("   • Use create_research_instance() or create_test_instance()")
+    println("   • Validate existing instances with validate_distinct_literals()")
+    println("   • Fix violations with ensure_distinct_literals()")
+    println("   • Generator enforces constraint: generate_random_3sat()")
 end

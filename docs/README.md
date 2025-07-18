@@ -117,7 +117,7 @@ Graph files should contain edges (one per line):
 
 ### Process a single graph interactively
 ```bash
-julia interactive_launcher.jl graphs/graph03.txt
+julia src/interactive_launcher.jl graphs/graph03.txt
 ```
 
 ### Batch process all graphs (stable)
@@ -157,6 +157,12 @@ julia launcher.jl
 
 ## 🔧 Recent Updates
 
+### July 2025 - Workspace Organization
+- ✅ **Organized test files**: Moved all test files to `test/` directory with categorized organization
+- ✅ **Documentation consolidation**: Moved all documentation markdown files to `docs/` directory
+- ✅ **Improved structure**: Created clear separation between code, tests, documentation, and data
+- ✅ **Enhanced navigation**: Updated documentation index with comprehensive file organization
+
 ### December 2024 - Batch Processing Fix
 - ✅ **Fixed batch processing output location**: All batch visualization files now save to `graphs/` subfolder
 - ✅ **Consistent file organization**: Both single file and batch processing outputs go to the same location
@@ -166,11 +172,32 @@ julia launcher.jl
 
 For detailed documentation, see the [`docs/`](docs/) folder:
 
+### Core Documentation
 - **[`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md)** - Current project capabilities and status
 - **[`docs/SOLUTION.md`](docs/SOLUTION.md)** - Technical solution details and algorithms
+- **[`docs/README.md`](docs/README.md)** - Main documentation index
+
+### Implementation Documentation  
+- **[`docs/ENHANCED_PIPELINE_SUMMARY.md`](docs/ENHANCED_PIPELINE_SUMMARY.md)** - Enhanced research pipeline summary
+- **[`docs/IMPLEMENTATION_COMPLETE.md`](docs/IMPLEMENTATION_COMPLETE.md)** - Complete implementation details
+- **[`docs/IMPROVED_IMPLEMENTATION.md`](docs/IMPROVED_IMPLEMENTATION.md)** - Implementation improvements
+- **[`docs/COMMUNITY_GUIDED_SAT_IMPLEMENTATION.md`](docs/COMMUNITY_GUIDED_SAT_IMPLEMENTATION.md)** - Community-guided SAT solving implementation
+- **[`docs/pseudocode_CD_3SAT.md`](docs/pseudocode_CD_3SAT.md)** - Community Detection to 3-SAT pseudocode
+
+### Analysis Documentation
+- **[`docs/MODULARITY_ANALYSIS_FINDINGS.md`](docs/MODULARITY_ANALYSIS_FINDINGS.md)** - Modularity analysis findings
+- **[`docs/positive_modularity_instance.md`](docs/positive_modularity_instance.md)** - Positive modularity research
+
+### Development History
 - **[`docs/CLEANUP_SUMMARY.md`](docs/CLEANUP_SUMMARY.md)** - Workspace organization summary
 - **[`docs/INTERACTIVE_ENHANCEMENTS.md`](docs/INTERACTIVE_ENHANCEMENTS.md)** - Interactive feature improvements
 - **[`docs/LAUNCHER_FIXES.md`](docs/LAUNCHER_FIXES.md)** - Launcher system development history
+- **[`docs/DOCUMENTATION_ORGANIZATION.md`](docs/DOCUMENTATION_ORGANIZATION.md)** - Documentation organization notes
+- **[`docs/WORKSPACE_ORGANIZATION.md`](docs/WORKSPACE_ORGANIZATION.md)** - Comprehensive workspace cleanup summary
+
+### Research Documentation
+- **[`docs/3SAT_community_detection_research.md`](docs/3SAT_community_detection_research.md)** - Community detection research
+- **[`docs/3SAT_graph_representation.md`](docs/3SAT_graph_representation.md)** - Graph representation methods
 
 ## 🎯 Recommendations
 

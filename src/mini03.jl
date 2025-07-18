@@ -22,7 +22,7 @@ mutable struct NodeInfo
     neighbors::Vector{Int}
 end
 
-function our_algorithm(g, edge_weights, node_info)
+function label_propagation_v2(g, edge_weights, node_info)
     current_colors = [node_info[k].label for k in 1:nv(g)]
     current_score = get_score(g, edge_weights, node_info, current_colors)
     changes_made = 0
@@ -70,6 +70,12 @@ function label_propagation(g, node_info)
 
         for n in shuffled_nodes
             neighbor_labels = [node_info[j].label for j in node_info[n].neighbors]
+            
+            # Skip nodes with no neighbors (isolated nodes)
+            if isempty(neighbor_labels)
+                continue
+            end
+            
             most_common = findmax(countmap(neighbor_labels))[2]
             if node_info[n].label != most_common
                 node_info[n].label = most_common
@@ -93,8 +99,8 @@ function main(filename)
     # println("Running label propagation algorithm...")
     # label_propagation(g, node_info)
 
-    # println("Running the updated algorithm...")
-    our_algorithm(g, edge_weights, node_info)
+    println("Running the improved label propagation v2 algorithm...")
+    label_propagation_v2(g, edge_weights, node_info)
 
     # Use a fixed-size color palette for cycling, e.g., 16 colors
     palette_size = 16
@@ -192,8 +198,8 @@ function run_graph_interactive(filename)
                 node_text_colors = [Colors.Lab(RGB(c)).l > 50 ? :black : :white for c in node_colors]
                 
             elseif choice == "2"
-                println("🔄 Running optimization algorithm...")
-                our_algorithm(g, edge_weights, node_info)
+                println("🔄 Running label propagation v2 algorithm...")
+                label_propagation_v2(g, edge_weights, node_info)
                 
                 # Update colors after optimization
                 labels = unique([node.label for node in values(node_info)])
